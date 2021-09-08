@@ -1,0 +1,7 @@
+{
+  "name": "metronome-cycle",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

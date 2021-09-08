@@ -1,0 +1,6 @@
+{
+	"appId": "io.ionic.starter",
+	"appName": "metronome-cycle",
+	"webDir": "www",
+	"bundledWebRuntime": false
+}
