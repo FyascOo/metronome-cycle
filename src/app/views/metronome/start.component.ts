@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {NgModule} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {IonicModule} from '@ionic/angular';
@@ -6,15 +6,14 @@ import {IonicModule} from '@ionic/angular';
 @Component({
   selector: 'app-start',
   template: `
-    <ion-button color="primary">Primary</ion-button>
+    <ion-button color="primary" (click)="eventStart.emit()">Start</ion-button>
   `,
 })
-export class StartComponent implements OnInit {
+export class StartComponent {
+  @Output() eventStart = new EventEmitter<boolean>();
   constructor() {
   }
 
-  ngOnInit() {
-  }
 }
 
 @NgModule({
