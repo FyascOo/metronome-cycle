@@ -7,7 +7,13 @@ import { MetronomeModule } from './metronome.component';
 import { StartModule } from './start.component';
 import { BPMModule } from './bpm.component';
 import { Howl } from 'howler';
-import { BehaviorSubject, interval, Subject, Subscription } from 'rxjs';
+import {
+  BehaviorSubject,
+  combineLatest,
+  interval,
+  Subject,
+  Subscription,
+} from 'rxjs';
 import { bpmToMillisecond, msToInterval } from 'src/app/shared/utils';
 
 @Component({
@@ -18,8 +24,11 @@ import { bpmToMillisecond, msToInterval } from 'src/app/shared/utils';
       <ion-grid>
         <ion-row>
           <ion-col>
-            <app-start [start]="start" (eventStart)="onStart()"></app-start>
-            <app-bpm (emitBPM)="updateBPM($event)"></app-bpm>
+            <app-start
+              [start]="start"
+              (eventStart)="start = !start"
+            ></app-start>
+            <app-bpm (emitBPM)="bpm$.next($event)"></app-bpm>
             <app-mesure (emitMesure)="mesure$.next($event)"></app-mesure>
           </ion-col>
         </ion-row>
@@ -27,7 +36,7 @@ import { bpmToMillisecond, msToInterval } from 'src/app/shared/utils';
           <ion-col size="3">
             <app-metronome
               [start]="start"
-              [bpm]="bpm"
+              [bpm]="bpm$ | async"
               [mesure]="mesure$ | async"
               (emitNbRotate)="nbRotate$.next($event)"
             ></app-metronome>
@@ -39,37 +48,24 @@ import { bpmToMillisecond, msToInterval } from 'src/app/shared/utils';
 })
 export class MetronomePage {
   start = false;
-  bpm = 60;
+  bpm$ = new BehaviorSubject<number>(60);
   nbRotate$ = new Subject<number>();
   mesure$ = new BehaviorSubject<number>(4);
   beep = new Howl({
     src: ['../assets/son/bip.flac'],
   });
-  intervalSub: Subscription;
 
   constructor() {
-    this.nbRotate$.subscribe((nbRotate) => {
-      if (
-        nbRotate === 0 ||
-        nbRotate === 60 ||
-        nbRotate === 120 ||
-        nbRotate === 180 ||
-        nbRotate === 240
-      ) {
-        this._playBip();
+    combineLatest([this.nbRotate$, this.mesure$, this.bpm$]).subscribe(
+      ([nbRotate, mesure, bpm]) => {
+        const tempo = Array(mesure)
+          .fill(0)
+          .map((v, i) => (i + 1) * ((60 / bpm) * 60));
+        if (tempo.includes(nbRotate)) {
+          this._playBip();
+        }
       }
-    });
-  }
-
-  onStart() {
-    this.start = !this.start;
-    if (this.start) {
-      this._playBip();
-    }
-  }
-
-  updateBPM(bpm: number) {
-    this.bpm = bpm;
+    );
   }
 
   private _playBip() {

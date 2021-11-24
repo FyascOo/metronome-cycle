@@ -1,12 +1,15 @@
 import {
+  AfterViewInit,
   Component,
   ElementRef,
   Input,
   NgModule,
   OnChanges,
   Output,
+  QueryList,
   SimpleChanges,
   ViewChild,
+  ViewChildren,
   ViewRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -38,8 +41,8 @@ import { BehaviorSubject } from 'rxjs';
           fill="url(#paint1_radial)"
         />
         <rect
-          *ngFor="let nb of mesures; let i = index"
-          [class]="'rotate' + i"
+          *ngFor="let nb of mesures"
+          #mesure
           id="mesure"
           x="101"
           width="1"
@@ -109,29 +112,14 @@ import { BehaviorSubject } from 'rxjs';
       </defs>
     </svg>
   `,
-  styles: [
-    `
-      .rotate1 {
-        transform-origin: center !important;
-        transform: rotateZ(90deg) !important;
-      }
-      .rotate2 {
-        transform-origin: center !important;
-        transform: rotateZ(180deg) !important;
-      }
-      .rotate3 {
-        transform-origin: center !important;
-        transform: rotateZ(-90deg) !important;
-      }
-    `,
-  ],
 })
-export class MetronomeComponent implements OnChanges {
+export class MetronomeComponent implements OnChanges, AfterViewInit {
   @Input() start: boolean;
   @Input() bpm: number;
   @Input() mesure: number;
   @Output() emitNbRotate = new BehaviorSubject<number>(0);
   @ViewChild('pointer') pointer: ElementRef;
+  @ViewChildren('mesure') barMesures: QueryList<ElementRef>;
   nbRotate = 0;
   rotate = 0;
   mesures: number[];
@@ -142,18 +130,43 @@ export class MetronomeComponent implements OnChanges {
     this._initiateLoop();
     if (this.mesure) {
       this.mesures = Array(this.mesure);
-      console.log(this.mesures);
     }
+  }
+
+  ngAfterViewInit() {
+    this._initMesure();
+    this._setMesure();
   }
 
   rotation() {
     this.nbRotate++;
     this.rotate = this.nbRotate * this._bpmPerCycle();
     this.emitNbRotate.next(this.nbRotate);
-    console.log('rotate: ', this.rotate, 'nbRotate: ', this.nbRotate);
     this._refreshValue();
     this._affectStyle();
     this._loop();
+  }
+
+  private _initMesure() {
+    this.barMesures.forEach((v, i) => {
+      if (i !== 0) {
+        const deg = (360 / this.barMesures.length) * i;
+        v.nativeElement.style.transformOrigin = 'center';
+        v.nativeElement.style.transform = `rotateZ(${deg}deg)`;
+      }
+    });
+  }
+
+  private _setMesure() {
+    this.barMesures.changes.subscribe((bar) => {
+      bar.forEach((v, i) => {
+        if (i !== 0) {
+          const deg = (360 / this.barMesures.length) * i;
+          v.nativeElement.style.transformOrigin = 'center';
+          v.nativeElement.style.transform = `rotateZ(${deg}deg)`;
+        }
+      });
+    });
   }
 
   private _initiateLoop() {
