@@ -1,10 +1,5 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  NgModule,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
+import { MesureModule } from './mesure.component';
+import { ChangeDetectionStrategy, Component, NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
@@ -12,7 +7,8 @@ import { MetronomeModule } from './metronome.component';
 import { StartModule } from './start.component';
 import { BPMModule } from './bpm.component';
 import { Howl } from 'howler';
-import { interval, Subscription } from 'rxjs';
+import { BehaviorSubject, interval, Subject, Subscription } from 'rxjs';
+import { bpmToMillisecond, msToInterval } from 'src/app/shared/utils';
 
 @Component({
   selector: 'app-metronome-page',
@@ -22,13 +18,19 @@ import { interval, Subscription } from 'rxjs';
       <ion-grid>
         <ion-row>
           <ion-col>
-            <app-start (eventStart)="onStart()"></app-start>
+            <app-start [start]="start" (eventStart)="onStart()"></app-start>
             <app-bpm (emitBPM)="updateBPM($event)"></app-bpm>
+            <app-mesure (emitMesure)="mesure$.next($event)"></app-mesure>
           </ion-col>
         </ion-row>
         <ion-row class="ion-justify-content-center">
           <ion-col size="3">
-            <app-metronome [start]="start"></app-metronome>
+            <app-metronome
+              [start]="start"
+              [bpm]="bpm"
+              [mesure]="mesure$ | async"
+              (emitNbRotate)="nbRotate$.next($event)"
+            ></app-metronome>
           </ion-col>
         </ion-row>
       </ion-grid>
@@ -37,20 +39,32 @@ import { interval, Subscription } from 'rxjs';
 })
 export class MetronomePage {
   start = false;
-  bpm = 1000;
+  bpm = 60;
+  nbRotate$ = new Subject<number>();
+  mesure$ = new BehaviorSubject<number>(4);
   beep = new Howl({
     src: ['../assets/son/bip.flac'],
   });
   intervalSub: Subscription;
 
-  constructor() {}
+  constructor() {
+    this.nbRotate$.subscribe((nbRotate) => {
+      if (
+        nbRotate === 0 ||
+        nbRotate === 60 ||
+        nbRotate === 120 ||
+        nbRotate === 180 ||
+        nbRotate === 240
+      ) {
+        this._playBip();
+      }
+    });
+  }
 
   onStart() {
     this.start = !this.start;
     if (this.start) {
       this._playBip();
-    } else {
-      this._stopBip();
     }
   }
 
@@ -59,11 +73,7 @@ export class MetronomePage {
   }
 
   private _playBip() {
-    this.intervalSub = interval(this.bpm).subscribe(() => this.beep.play());
-  }
-
-  private _stopBip() {
-    this.intervalSub.unsubscribe();
+    this.beep.play();
   }
 }
 
@@ -75,6 +85,7 @@ export class MetronomePage {
     MetronomeModule,
     StartModule,
     BPMModule,
+    MesureModule,
   ],
   declarations: [MetronomePage],
 })
