@@ -60,7 +60,11 @@ export class MetronomePage {
       ([nbRotate, mesure, bpm]) => {
         const tempo = Array(mesure)
           .fill(0)
-          .map((v, i) => (i + 1) * ((60 / bpm) * 60));
+          .map((v, i) => {
+            const speed = (i + 1) * ((60 / bpm) * 60);
+            console.log(Math.round(speed));
+            return Math.round(speed);
+          });
         if (tempo.includes(nbRotate)) {
           this._playBip();
         }
