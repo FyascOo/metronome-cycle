@@ -1,20 +1,13 @@
-import { MesureModule } from './mesure.component';
-import { ChangeDetectionStrategy, Component, NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
+import { Howl } from 'howler';
+import { BehaviorSubject, combineLatest, Subject } from 'rxjs';
+import { BPMModule } from './bpm.component';
+import { MesureModule } from './mesure.component';
 import { MetronomeModule } from './metronome.component';
 import { StartModule } from './start.component';
-import { BPMModule } from './bpm.component';
-import { Howl } from 'howler';
-import {
-  BehaviorSubject,
-  combineLatest,
-  interval,
-  Subject,
-  Subscription,
-} from 'rxjs';
-import { bpmToMillisecond, msToInterval } from 'src/app/shared/utils';
 
 @Component({
   selector: 'app-metronome-page',
@@ -38,6 +31,7 @@ import { bpmToMillisecond, msToInterval } from 'src/app/shared/utils';
             [bpm]="bpm$ | async"
             [mesure]="mesure$ | async"
             (emitNbRotate)="nbRotate$.next($event)"
+            [isBeeping]="emitBeep$ | async"
           ></app-metronome>
         </ion-row>
       </ion-grid>
@@ -49,6 +43,7 @@ export class MetronomePage {
   bpm$ = new BehaviorSubject<number>(60);
   nbRotate$ = new Subject<number>();
   mesure$ = new BehaviorSubject<number>(4);
+  emitBeep$ = new Subject();
   beep = new Howl({
     src: ['../assets/son/bip.flac'],
   });
@@ -64,6 +59,8 @@ export class MetronomePage {
           });
         if (tempo.includes(nbRotate)) {
           this._playBip();
+          const nbMesure = nbRotate / bpm === 4 ? 0 : nbRotate / bpm;
+          this.emitBeep$.next(nbMesure);
         }
       }
     );

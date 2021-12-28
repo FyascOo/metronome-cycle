@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -10,17 +11,16 @@ import {
   SimpleChanges,
   ViewChild,
   ViewChildren,
-  ViewRef,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
+import { delay, take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-metronome',
   template: `
     <svg
-      width="300"
-      height="200"
+      width="400"
+      height="400"
       viewBox="0 0 200 200"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -117,6 +117,7 @@ export class MetronomeComponent implements OnChanges, AfterViewInit {
   @Input() start: boolean;
   @Input() bpm: number;
   @Input() mesure: number;
+  @Input() isBeeping: number;
   @Output() emitNbRotate = new BehaviorSubject<number>(0);
   @ViewChild('pointer') pointer: ElementRef;
   @ViewChildren('mesure') barMesures: QueryList<ElementRef>;
@@ -126,10 +127,17 @@ export class MetronomeComponent implements OnChanges, AfterViewInit {
 
   constructor() {}
 
-  ngOnChanges() {
-    this._initiateLoop();
-    if (this.mesure) {
-      this.mesures = Array(this.mesure);
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes.isBeeping) {
+      if (this.barMesures) {
+        this._toBlink();
+      }
+    }
+    if (changes.start) {
+      this._initiateLoop();
+      if (this.mesure) {
+        this.mesures = Array(this.mesure);
+      }
     }
   }
 
@@ -193,6 +201,17 @@ export class MetronomeComponent implements OnChanges, AfterViewInit {
 
   private _bpmPerCycle() {
     return this.bpm / 10 / this.mesure;
+  }
+
+  private _toBlink() {
+    this.barMesures.get(this.isBeeping).nativeElement.style.fill = 'red';
+    of(1)
+      .pipe(take(1), delay(300))
+      .subscribe(
+        () =>
+          (this.barMesures.get(this.isBeeping).nativeElement.style.fill =
+            'black')
+      );
   }
 }
 
