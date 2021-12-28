@@ -19,8 +19,8 @@ import { BehaviorSubject } from 'rxjs';
   selector: 'app-metronome',
   template: `
     <svg
-      width="500"
-      height="500"
+      width="300"
+      height="200"
       viewBox="0 0 200 200"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

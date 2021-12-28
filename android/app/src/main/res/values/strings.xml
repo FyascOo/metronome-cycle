@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">metronome-cycle</string>
+    <string name="title_activity_main">metronome-cycle</string>
+    <string name="package_name">com.fyasco.metronome</string>
+    <string name="custom_url_scheme">com.fyasco.metronome</string>
+</resources>

@@ -33,14 +33,12 @@ import { bpmToMillisecond, msToInterval } from 'src/app/shared/utils';
           </ion-col>
         </ion-row>
         <ion-row class="ion-justify-content-center">
-          <ion-col size="3">
-            <app-metronome
-              [start]="start"
-              [bpm]="bpm$ | async"
-              [mesure]="mesure$ | async"
-              (emitNbRotate)="nbRotate$.next($event)"
-            ></app-metronome>
-          </ion-col>
+          <app-metronome
+            [start]="start"
+            [bpm]="bpm$ | async"
+            [mesure]="mesure$ | async"
+            (emitNbRotate)="nbRotate$.next($event)"
+          ></app-metronome>
         </ion-row>
       </ion-grid>
     </ion-content>
